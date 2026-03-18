@@ -7,6 +7,8 @@ export default function ValorantAuthorizationApp() {
     riotId: "",
     responsibleName: "",
     responsibleEmail: "",
+    monitor: "",
+    observation: "",
     authorized: false,
   });
 
@@ -14,15 +16,9 @@ export default function ValorantAuthorizationApp() {
     const saved = localStorage.getItem("players");
     return saved ? JSON.parse(saved) : [];
   });
+
   const [search, setSearch] = useState("");
 
-  // Carregar dados salvos
-  useEffect(() => {
-    const saved = localStorage.getItem("players");
-    if (saved) setPlayers(JSON.parse(saved));
-  }, []);
-
-  // Salvar automaticamente
   useEffect(() => {
     localStorage.setItem("players", JSON.stringify(players));
   }, [players]);
@@ -37,18 +33,34 @@ export default function ValorantAuthorizationApp() {
 
   function handleSubmit(e) {
     e.preventDefault();
+
+    if (Number(form.age) < 12) {
+      alert("Idade mínima para jogar é 12 anos.");
+      return;
+    }
+
     if (!form.authorized) {
       alert("É necessário confirmar a autorização do responsável.");
       return;
     }
 
-    setPlayers([...players, form]);
+    const newEntry = {
+      ...form,
+      date: new Date().toLocaleString('pt-BR'),
+    };
+
+    const updated = [...players, newEntry];
+    setPlayers(updated);
+    localStorage.setItem("players", JSON.stringify(updated));
+
     setForm({
       name: "",
       age: "",
       riotId: "",
       responsibleName: "",
       responsibleEmail: "",
+      monitor: "",
+      observation: "",
       authorized: false,
     });
   }
@@ -67,70 +79,43 @@ export default function ValorantAuthorizationApp() {
       <h1>Autorização Valorant</h1>
 
       <form onSubmit={handleSubmit} style={{ marginBottom: 20 }}>
-        <input
-          placeholder="Nome do aluno"
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          required
-        />
-        <br />
-        <br />
+        <input placeholder="Nome do aluno" name="name" value={form.name} onChange={handleChange} required />
+        <br /><br />
 
-        <input
-          placeholder="Idade"
-          name="age"
-          type="number"
-          value={form.age}
-          onChange={handleChange}
-          required
-        />
-        <br />
-        <br />
+        <input placeholder="Idade" name="age" type="number" value={form.age} onChange={handleChange} required />
+        <br /><br />
 
-        <input
-          placeholder="Riot ID"
-          name="riotId"
-          value={form.riotId}
-          onChange={handleChange}
-          required
-        />
-        <br />
-        <br />
+        <input placeholder="Riot ID" name="riotId" value={form.riotId} onChange={handleChange} required />
+        <br /><br />
 
-        <input
-          placeholder="Nome do responsável"
-          name="responsibleName"
-          value={form.responsibleName}
-          onChange={handleChange}
-          required
-        />
-        <br />
-        <br />
+        <input placeholder="Nome do responsável" name="responsibleName" value={form.responsibleName} onChange={handleChange} required />
+        <br /><br />
 
-        <input
-          placeholder="Email do responsável"
-          name="responsibleEmail"
-          type="email"
-          value={form.responsibleEmail}
+        <input placeholder="Email do responsável" name="responsibleEmail" type="email" value={form.responsibleEmail} onChange={handleChange} required />
+        <br /><br />
+
+        <select name="monitor" value={form.monitor} onChange={handleChange} required>
+          <option value="">Selecione o monitor</option>
+          <option value="Marcos">Marcos</option>
+          <option value="Outro">Outro</option>
+        </select>
+        <br /><br />
+
+        <textarea
+          placeholder="Observação (ex: mostrou email, print, etc)"
+          name="observation"
+          value={form.observation}
           onChange={handleChange}
-          required
         />
-        <br />
-        <br />
+
+        <br /><br />
 
         <label>
-          <input
-            type="checkbox"
-            name="authorized"
-            checked={form.authorized}
-            onChange={handleChange}
-          />
+          <input type="checkbox" name="authorized" checked={form.authorized} onChange={handleChange} />
           Confirmo que a autorização foi validada
         </label>
 
-        <br />
-        <br />
+        <br /><br />
 
         <button type="submit">Registrar</button>
       </form>
@@ -151,7 +136,10 @@ export default function ValorantAuthorizationApp() {
           {filteredPlayers.map((p, i) => (
             <li key={i} style={{ marginBottom: 10 }}>
               <strong>{p.name}</strong> ({p.age} anos) - {p.riotId} <br />
-              Responsável: {p.responsibleName}
+              Responsável: {p.responsibleName} <br />
+              Monitor: {p.monitor} <br />
+              Data: {p.date} <br />
+              Obs: {p.observation || "-"}
               <br />
               <button onClick={() => removePlayer(i)}>Remover</button>
             </li>
