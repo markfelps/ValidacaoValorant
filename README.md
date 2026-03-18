@@ -1,0 +1,2 @@
+# ValidacaoValorant
+Created with CodeSandbox
