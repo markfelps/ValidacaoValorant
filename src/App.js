@@ -97,7 +97,7 @@ export default function ValorantAuthorizationApp() {
         <select name="monitor" value={form.monitor} onChange={handleChange} required>
           <option value="">Selecione o monitor</option>
           <option value="Marcos">Marcos</option>
-          <option value="Nathan"><Nathan</option>
+          <option value="Marcos">Nathan</option>
           <option value="Outro">Outro</option>
         </select>
         <br /><br />
