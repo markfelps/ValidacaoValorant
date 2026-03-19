@@ -23,6 +23,47 @@ function isThisWeek(dateStr) {
   return days <= 7;
 }
 
+function downloadCSV(rows, filename = "alunos_valorant.csv") {
+  const headers = [
+    "Nome",
+    "Idade",
+    "RiotID",
+    "Responsavel",
+    "Email",
+    "Monitor",
+    "Data",
+    "Status",
+    "Observacao"
+  ];
+
+  const csvContent = [
+    headers.join(","),
+    ...rows.map((p) => {
+      const status = p.active ? (isExpired(p.date) ? "Expirado" : "Ativo") : "Inativo";
+      return [
+        p.name,
+        p.age,
+        p.riotId,
+        p.responsibleName,
+        p.responsibleEmail,
+        p.monitor,
+        p.date,
+        status,
+        (p.observation || "").replace(/,/g, " ")
+      ].join(",");
+    })
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 export default function ValorantAuthorizationApp() {
   const [form, setForm] = useState({
     name: "",
@@ -60,7 +101,6 @@ export default function ValorantAuthorizationApp() {
   function handleFile(e) {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onloadend = () => {
       setForm((prev) => ({ ...prev, proof: reader.result }));
@@ -187,9 +227,7 @@ export default function ValorantAuthorizationApp() {
           <div>
             <img src={form.proof} alt="preview" style={{ width: 100 }} />
             <br />
-            <button type="button" onClick={removeProof}>
-              Remover imagem
-            </button>
+            <button type="button" onClick={removeProof}>Remover imagem</button>
           </div>
         )}
 
@@ -221,6 +259,12 @@ export default function ValorantAuthorizationApp() {
         <option value="week">Últimos 7 dias</option>
       </select>
 
+      <br /><br />
+
+      <button onClick={() => downloadCSV(filteredPlayers)}>
+        Exportar CSV
+      </button>
+
       <h2 style={{ marginTop: 20 }}>Alunos</h2>
 
       {filteredPlayers.length === 0 ? (
@@ -229,7 +273,6 @@ export default function ValorantAuthorizationApp() {
         <ul>
           {filteredPlayers.map((p, i) => {
             const expired = isExpired(p.date);
-
             return (
               <li key={i} style={{ marginBottom: 15, border: "1px solid #ccc", padding: 10 }}>
                 <strong>{p.name}</strong> ({p.age}) - {p.riotId} <br />
@@ -247,12 +290,15 @@ export default function ValorantAuthorizationApp() {
                 <button onClick={() => deactivatePlayer(i)} style={{ marginLeft: 10 }}>
                   Inativar
                 </button>
-                <button onClick={() => {
-                  if (window.confirm('Tem certeza que deseja remover este aluno?')) {
-                    const updated = players.filter((_, idx) => idx !== i);
-                    setPlayers(updated);
-                  }
-                }} style={{ marginLeft: 10, color: 'red' }}>
+                <button
+                  onClick={() => {
+                    if (window.confirm('Tem certeza que deseja remover este aluno?')) {
+                      const updated = players.filter((_, idx) => idx !== i);
+                      setPlayers(updated);
+                    }
+                  }}
+                  style={{ marginLeft: 10, color: 'red' }}
+                >
                   Remover
                 </button>
               </li>
