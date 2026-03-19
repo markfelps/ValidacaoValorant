@@ -19,6 +19,7 @@ export default function ValorantAuthorizationApp() {
     monitor: "",
     observation: "",
     authorized: false,
+    proof: "", // imagem base64
   });
 
   const [players, setPlayers] = useState(() => {
@@ -39,6 +40,17 @@ export default function ValorantAuthorizationApp() {
       ...form,
       [name]: type === "checkbox" ? checked : value,
     });
+  }
+
+  function handleFile(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm({ ...form, proof: reader.result });
+    };
+    reader.readAsDataURL(file);
   }
 
   function handleSubmit(e) {
@@ -80,6 +92,7 @@ export default function ValorantAuthorizationApp() {
       monitor: "",
       observation: "",
       authorized: false,
+      proof: "",
     });
   }
 
@@ -123,7 +136,6 @@ export default function ValorantAuthorizationApp() {
         <select name="monitor" value={form.monitor} onChange={handleChange} required>
           <option value="">Selecione o monitor</option>
           <option value="Marcos">Marcos</option>
-          <option value="Nathan">Nathan</option>
           <option value="Outro">Outro</option>
         </select>
         <br /><br />
@@ -134,6 +146,18 @@ export default function ValorantAuthorizationApp() {
           value={form.observation}
           onChange={handleChange}
         />
+
+        <br /><br />
+
+        <label>Print da autorização:</label>
+        <br />
+        <input type="file" accept="image/*" onChange={handleFile} />
+
+        <br /><br />
+
+        {form.proof && (
+          <img src={form.proof} alt="preview" style={{ width: 100 }} />
+        )}
 
         <br /><br />
 
@@ -173,6 +197,10 @@ export default function ValorantAuthorizationApp() {
                 Data: {p.date} <br />
                 Status: {p.active ? (expired ? "⚠ Expirado" : "🟢 Ativo") : "🔴 Inativo"} <br />
                 Obs: {p.observation || "-"}
+                <br />
+                {p.proof && (
+                  <img src={p.proof} alt="proof" style={{ width: 120, marginTop: 5 }} />
+                )}
                 <br /><br />
                 <button onClick={() => editPlayer(i)}>Editar</button>
                 <button onClick={() => deactivatePlayer(i)} style={{ marginLeft: 10 }}>
