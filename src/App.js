@@ -247,6 +247,14 @@ export default function ValorantAuthorizationApp() {
                 <button onClick={() => deactivatePlayer(i)} style={{ marginLeft: 10 }}>
                   Inativar
                 </button>
+                <button onClick={() => {
+                  if (window.confirm('Tem certeza que deseja remover este aluno?')) {
+                    const updated = players.filter((_, idx) => idx !== i);
+                    setPlayers(updated);
+                  }
+                }} style={{ marginLeft: 10, color: 'red' }}>
+                  Remover
+                </button>
               </li>
             );
           })}
