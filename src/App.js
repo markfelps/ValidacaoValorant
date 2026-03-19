@@ -1,5 +1,14 @@
 import { useState, useEffect } from "react";
 
+const EXPIRATION_DAYS = 180; // 6 meses
+
+function isExpired(dateStr) {
+  const created = new Date(dateStr);
+  const now = new Date();
+  const diffDays = (now - created) / (1000 * 60 * 60 * 24);
+  return diffDays > EXPIRATION_DAYS;
+}
+
 export default function ValorantAuthorizationApp() {
   const [form, setForm] = useState({
     name: "",
@@ -18,6 +27,7 @@ export default function ValorantAuthorizationApp() {
   });
 
   const [search, setSearch] = useState("");
+  const [editingIndex, setEditingIndex] = useState(null);
 
   useEffect(() => {
     localStorage.setItem("players", JSON.stringify(players));
@@ -47,11 +57,19 @@ export default function ValorantAuthorizationApp() {
     const newEntry = {
       ...form,
       date: new Date().toLocaleString('pt-BR'),
+      active: true,
     };
 
-    const updated = [...players, newEntry];
+    let updated;
+
+    if (editingIndex !== null) {
+      updated = players.map((p, i) => (i === editingIndex ? newEntry : p));
+      setEditingIndex(null);
+    } else {
+      updated = [...players, newEntry];
+    }
+
     setPlayers(updated);
-    localStorage.setItem("players", JSON.stringify(updated));
 
     setForm({
       name: "",
@@ -65,9 +83,17 @@ export default function ValorantAuthorizationApp() {
     });
   }
 
-  function removePlayer(index) {
-    const updated = players.filter((_, i) => i !== index);
+  function deactivatePlayer(index) {
+    const updated = players.map((p, i) =>
+      i === index ? { ...p, active: false } : p
+    );
     setPlayers(updated);
+  }
+
+  function editPlayer(index) {
+    const p = players[index];
+    setForm(p);
+    setEditingIndex(index);
   }
 
   const filteredPlayers = players.filter((p) =>
@@ -97,13 +123,12 @@ export default function ValorantAuthorizationApp() {
         <select name="monitor" value={form.monitor} onChange={handleChange} required>
           <option value="">Selecione o monitor</option>
           <option value="Marcos">Marcos</option>
-          <option value="Marcos">Nathan</option>
           <option value="Outro">Outro</option>
         </select>
         <br /><br />
 
         <textarea
-          placeholder="Observação (ex: mostrou email, print, etc)"
+          placeholder="Observação"
           name="observation"
           value={form.observation}
           onChange={handleChange}
@@ -113,12 +138,14 @@ export default function ValorantAuthorizationApp() {
 
         <label>
           <input type="checkbox" name="authorized" checked={form.authorized} onChange={handleChange} />
-          Confirmo que a autorização foi validada
+          Confirmo autorização
         </label>
 
         <br /><br />
 
-        <button type="submit">Registrar</button>
+        <button type="submit">
+          {editingIndex !== null ? "Atualizar" : "Registrar"}
+        </button>
       </form>
 
       <h2>Buscar aluno</h2>
@@ -128,23 +155,31 @@ export default function ValorantAuthorizationApp() {
         onChange={(e) => setSearch(e.target.value)}
       />
 
-      <h2 style={{ marginTop: 20 }}>Alunos autorizados</h2>
+      <h2 style={{ marginTop: 20 }}>Alunos</h2>
 
       {filteredPlayers.length === 0 ? (
         <p>Nenhum aluno encontrado.</p>
       ) : (
         <ul>
-          {filteredPlayers.map((p, i) => (
-            <li key={i} style={{ marginBottom: 10 }}>
-              <strong>{p.name}</strong> ({p.age} anos) - {p.riotId} <br />
-              Responsável: {p.responsibleName} <br />
-              Monitor: {p.monitor} <br />
-              Data: {p.date} <br />
-              Obs: {p.observation || "-"}
-              <br />
-              <button onClick={() => removePlayer(i)}>Remover</button>
-            </li>
-          ))}
+          {filteredPlayers.map((p, i) => {
+            const expired = isExpired(p.date);
+
+            return (
+              <li key={i} style={{ marginBottom: 15, border: "1px solid #ccc", padding: 10 }}>
+                <strong>{p.name}</strong> ({p.age}) - {p.riotId} <br />
+                Responsável: {p.responsibleName} <br />
+                Monitor: {p.monitor} <br />
+                Data: {p.date} <br />
+                Status: {p.active ? (expired ? "⚠ Expirado" : "🟢 Ativo") : "🔴 Inativo"} <br />
+                Obs: {p.observation || "-"}
+                <br /><br />
+                <button onClick={() => editPlayer(i)}>Editar</button>
+                <button onClick={() => deactivatePlayer(i)} style={{ marginLeft: 10 }}>
+                  Inativar
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
