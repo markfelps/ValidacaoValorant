@@ -1,12 +1,26 @@
 import { useState, useEffect } from "react";
 
-const EXPIRATION_DAYS = 180; // 6 meses
+const EXPIRATION_DAYS = 180;
 
 function isExpired(dateStr) {
   const created = new Date(dateStr);
   const now = new Date();
   const diffDays = (now - created) / (1000 * 60 * 60 * 24);
   return diffDays > EXPIRATION_DAYS;
+}
+
+function isToday(dateStr) {
+  const d = new Date(dateStr);
+  const today = new Date();
+  return d.toDateString() === today.toDateString();
+}
+
+function isThisWeek(dateStr) {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diff = now - d;
+  const days = diff / (1000 * 60 * 60 * 24);
+  return days <= 7;
 }
 
 export default function ValorantAuthorizationApp() {
@@ -28,6 +42,7 @@ export default function ValorantAuthorizationApp() {
   });
 
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("all");
   const [editingIndex, setEditingIndex] = useState(null);
 
   useEffect(() => {
@@ -113,9 +128,17 @@ export default function ValorantAuthorizationApp() {
     setEditingIndex(index);
   }
 
-  const filteredPlayers = players.filter((p) =>
+  let filteredPlayers = players.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (filter === "today") {
+    filteredPlayers = filteredPlayers.filter((p) => isToday(p.date));
+  }
+
+  if (filter === "week") {
+    filteredPlayers = filteredPlayers.filter((p) => isThisWeek(p.date));
+  }
 
   return (
     <div style={{ padding: 20, fontFamily: "Arial" }}>
@@ -190,6 +213,13 @@ export default function ValorantAuthorizationApp() {
         value={search}
         onChange={(e) => setSearch(e.target.value)}
       />
+
+      <h2>Filtro por data</h2>
+      <select value={filter} onChange={(e) => setFilter(e.target.value)}>
+        <option value="all">Todos</option>
+        <option value="today">Hoje</option>
+        <option value="week">Últimos 7 dias</option>
+      </select>
 
       <h2 style={{ marginTop: 20 }}>Alunos</h2>
 
