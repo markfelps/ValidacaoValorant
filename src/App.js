@@ -19,7 +19,7 @@ export default function ValorantAuthorizationApp() {
     monitor: "",
     observation: "",
     authorized: false,
-    proof: "", // imagem base64
+    proof: "",
   });
 
   const [players, setPlayers] = useState(() => {
@@ -48,9 +48,13 @@ export default function ValorantAuthorizationApp() {
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      setForm({ ...form, proof: reader.result });
+      setForm((prev) => ({ ...prev, proof: reader.result }));
     };
     reader.readAsDataURL(file);
+  }
+
+  function removeProof() {
+    setForm((prev) => ({ ...prev, proof: "" }));
   }
 
   function handleSubmit(e) {
@@ -157,7 +161,13 @@ export default function ValorantAuthorizationApp() {
         <br /><br />
 
         {form.proof && (
-          <img src={form.proof} alt="preview" style={{ width: 100 }} />
+          <div>
+            <img src={form.proof} alt="preview" style={{ width: 100 }} />
+            <br />
+            <button type="button" onClick={removeProof}>
+              Remover imagem
+            </button>
+          </div>
         )}
 
         <br /><br />
